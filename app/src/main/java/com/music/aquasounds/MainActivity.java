@@ -17,6 +17,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.ImageButton;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.SeekBar;
 import android.widget.TextView;
@@ -24,6 +26,7 @@ import android.widget.TextView;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
@@ -35,6 +38,7 @@ public class MainActivity extends AppCompatActivity {
     private boolean initialized;
     private List<String> musicFilesList;
     private final MediaPlayer mp = new MediaPlayer();
+    private int currentlyPlaying;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -75,17 +79,16 @@ public class MainActivity extends AppCompatActivity {
         List<String> extensions = Arrays.asList("mp3", "wav");
         for(File file : files) {
             final String filePath = file.getAbsolutePath();
-            Log.d("filePathDebug", filePath);
             if (filePath.lastIndexOf("/") == -1)
                 continue;
             final String fileName = filePath.substring(filePath.lastIndexOf("/") + 1);
             if (fileName.lastIndexOf(".") == -1)
                 continue;
             final String extension = fileName.substring(fileName.lastIndexOf(".") + 1);
-            Log.d("extensionDebug", extension);
             if(extensions.contains(extension))
                 musicFilesList.add(filePath);
         }
+        sortMusicList();
     }
 
     private void fillMusicList() {
@@ -94,16 +97,20 @@ public class MainActivity extends AppCompatActivity {
         addMusicFilesFrom(String.valueOf(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)));
     }
 
+    private void sortMusicList() {
+        Collections.sort(musicFilesList);
+    }
+
     private int playMusicFile(String filePath) {
         try {
             mp.reset();
             mp.setDataSource(filePath);
             mp.prepare();
             mp.start();
-            Log.d("playingDebug",filePath);
         } catch (Exception e) {
             e.printStackTrace();
         }
+        currentlyPlaying = musicFilesList.indexOf(filePath);
         return mp.getDuration();
     }
 
@@ -118,6 +125,38 @@ public class MainActivity extends AppCompatActivity {
         return sMinutes + ":" + sSeconds;
     }
 
+    private void previousMusic() {
+        if(mp.getCurrentPosition() > 5000)
+            mp.seekTo(0);
+        else {
+            String currentPath;
+            try {
+                currentPath = musicFilesList.get(currentlyPlaying - 1);
+            } catch (Exception e) {
+                currentPath = musicFilesList.get(musicFilesList.size() - 1);
+            }
+            playMusicFile(currentPath);
+        }
+    }
+    private void pauseMusic(ImageButton pauseButton) {
+        if(mp.isPlaying()) {
+            mp.pause();
+            pauseButton.setImageResource(android.R.drawable.ic_media_play);
+        } else {
+            mp.start();
+            pauseButton.setImageResource(android.R.drawable.ic_media_pause);
+        }
+    }
+    private void nextMusic() {
+        String currentPath;
+        try {
+            currentPath = musicFilesList.get(currentlyPlaying + 1);
+        } catch (Exception e) {
+            currentPath = musicFilesList.get(0);
+        }
+        playMusicFile(currentPath);
+    }
+
     @Override
     protected void onResume() {
         super.onResume();
@@ -129,8 +168,12 @@ public class MainActivity extends AppCompatActivity {
             final ListView listView = findViewById(R.id.listView);
             final TextAdapter textAdapter = new TextAdapter();
             final SeekBar seekBar = findViewById(R.id.seekBar);
+            final LinearLayout utilityBar = findViewById(R.id.utilityBar);
             final TextView currentMusicTime = findViewById(R.id.currentMusicTime);
             final TextView totalMusicTime = findViewById(R.id.totalMusicTime);
+            final ImageButton previousButton = findViewById(R.id.previousButton);
+            final ImageButton pauseButton = findViewById(R.id.pauseButton);
+            final ImageButton nextButton = findViewById(R.id.nextButton);
             musicFilesList = new ArrayList<>();
             fillMusicList();
             textAdapter.setData(musicFilesList);
@@ -151,7 +194,9 @@ public class MainActivity extends AppCompatActivity {
                     mp.seekTo(seekBar.getProgress());
                 }
             });
-            mp.setOnCompletionListener(mediaPlayer -> seekBar.setVisibility(View.GONE));
+            previousButton.setOnClickListener(view -> previousMusic());
+            pauseButton.setOnClickListener(view -> pauseMusic(pauseButton));
+            nextButton.setOnClickListener(view -> nextMusic());
             listView.setOnItemClickListener((adapterView, view, i, l) -> {
                 final String musicFilePath = musicFilesList.get(i);
                 final int songDuration = playMusicFile(musicFilePath);
@@ -164,7 +209,7 @@ public class MainActivity extends AppCompatActivity {
                 new Thread() {
                     @SuppressWarnings("BusyWait")
                     public void run() {
-                        while(mp.isPlaying()) {
+                        while(mp.getCurrentPosition() < mp.getDuration()) {
                             try {
                                 Thread.sleep(1000);
                             } catch (InterruptedException e) {
@@ -172,12 +217,14 @@ public class MainActivity extends AppCompatActivity {
                             }
                             runOnUiThread(() -> {
                                 currentMusicTime.setText(durationToString(mp.getCurrentPosition()));
+                                totalMusicTime.setText(durationToString(mp.getDuration()));
                                 seekBar.setProgress(mp.getCurrentPosition());
                             });
                         }
                     }
                 }.start();
                 seekBar.setVisibility(View.VISIBLE);
+                utilityBar.setVisibility(View.VISIBLE);
             });
             initialized = true;
         }

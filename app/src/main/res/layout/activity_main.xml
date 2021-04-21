@@ -10,9 +10,11 @@
         android:layout_weight="1"/>
     
     <LinearLayout
+        android:id="@+id/utilityBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:visibility="gone">
         <TextView
             android:id="@+id/currentMusicTime"
             android:paddingStart="16dp"
@@ -23,6 +25,36 @@
             android:layout_height="wrap_content"
             android:gravity="start"
             android:layout_weight="1"/>
+        <ImageButton
+            android:id="@+id/previousButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:layout_weight="1"
+            android:src="@android:drawable/ic_media_previous"
+            android:background="@android:color/transparent"
+            android:adjustViewBounds="true"
+            android:scaleType="fitCenter"/>
+        <ImageButton
+            android:id="@+id/pauseButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:layout_weight="1"
+            android:src="@android:drawable/ic_media_pause"
+            android:background="@android:color/transparent"
+            android:adjustViewBounds="true"
+            android:scaleType="fitCenter"/>
+        <ImageButton
+            android:id="@+id/nextButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:layout_weight="1"
+            android:src="@android:drawable/ic_media_next"
+            android:background="@android:color/transparent"
+            android:adjustViewBounds="true"
+            android:scaleType="fitCenter"/>
         <TextView
             android:id="@+id/totalMusicTime"
             android:paddingStart="0dp"
@@ -36,8 +68,8 @@
     </LinearLayout>
     
     <SeekBar
-        android:visibility="gone"
         android:id="@+id/seekBar"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"/>
+        android:layout_height="wrap_content"
+        android:visibility="gone"/>
 </LinearLayout>
