@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "1019333775886",
+    "project_id": "aqua-sounds",
+    "storage_bucket": "aqua-sounds.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1019333775886:android:07a044d9e69a96b831625f",
+        "android_client_info": {
+          "package_name": "com.music.aquasounds"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1019333775886-524337gr4vrv2aj4mpudgkeatr7dkjr5.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB1mK0P7hSrkuFLNzeU_oXZrv5de3ztGfQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1019333775886-524337gr4vrv2aj4mpudgkeatr7dkjr5.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
