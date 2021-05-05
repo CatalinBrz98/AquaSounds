@@ -3,24 +3,23 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.ActivityManager;
 import android.content.pm.PackageManager;
-import android.graphics.Color;
 import android.media.MediaPlayer;
 import android.os.Bundle;
-import android.os.Environment;
-import android.util.Log;
+import android.view.View;
+import android.widget.ImageButton;
+import android.widget.SeekBar;
+import android.widget.TextView;
+
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-
 import com.music.aquasounds.adapters.MusicRecyclerViewAdapter;
+import com.music.aquasounds.viewmodels.MusicListViewModel;
+import com.music.aquasounds.viewmodels.MusicViewModel;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import org.w3c.dom.Text;
 
 public class MainActivity extends AppCompatActivity implements MusicRecyclerViewAdapter.OnMusicClickListener {
 
@@ -31,8 +30,9 @@ public class MainActivity extends AppCompatActivity implements MusicRecyclerView
 
     //vars
     private MediaPlayer mediaPlayer;
-    private final ArrayList<String> musicPaths = new ArrayList<>();
-    private MusicRecyclerViewAdapter.MusicViewHolder currentPlayingHolder;
+    private final MusicListViewModel musicListViewModel = new MusicListViewModel();
+    private RecyclerView recyclerView;
+    private SeekBar seekBar;
 
     @SuppressLint("NewApi")
     private boolean permissionsGranted() {
@@ -60,81 +60,110 @@ public class MainActivity extends AppCompatActivity implements MusicRecyclerView
         super.onCreate(savedInstanceState);
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
         setContentView(R.layout.activity_main);
-        Log.d(TAG, "onCreate: started.");
         mediaPlayer = new MediaPlayer();
-        fillMusicList();
-    }
+        findViewById(R.id.previousButton).setOnClickListener(view -> previousMusic());
+        ImageButton imageButton = findViewById(R.id.pauseButton);
+        imageButton.setOnClickListener(view -> pauseMusic(imageButton));
+        findViewById(R.id.nextButton).setOnClickListener(view -> nextMusic());
+        seekBar = findViewById(R.id.seekBar);
+        seekBar.setActivated(true);
+        seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
 
-    private void sortMusicList() {
-        Collections.sort(musicPaths);
-    }
-
-    @SuppressWarnings("ResultOfMethodCallIgnored")
-    private void addMusicFilesFrom(String dirPath) {
-        final File musicDir = new File(dirPath);
-        if(!musicDir.exists()) {
-            musicDir.mkdir();
-            return;
-        }
-        final File[] files = musicDir.listFiles();
-        if(files == null)
-            return;
-        List<String> extensions = Arrays.asList("mp3", "wav");
-        for(File file : files) {
-            final String filePath = file.getAbsolutePath();
-            if (filePath.lastIndexOf("/") == -1)
-                continue;
-            final String fileName = filePath.substring(filePath.lastIndexOf("/") + 1);
-            if (fileName.lastIndexOf(".") == -1)
-                continue;
-            final String extension = fileName.substring(fileName.lastIndexOf(".") + 1);
-            if(extensions.contains(extension)) {
-                musicPaths.add(filePath);
-                Log.d(TAG, "addMusicFilesFrom: " + filePath);
             }
-        }
-        sortMusicList();
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                seekToUpdate();
+            }
+        });
+        musicListViewModel.fillMusicViewModels();
         initMusicRecyclerView();
     }
 
-    private void fillMusicList() {
-        musicPaths.clear();
-        addMusicFilesFrom(String.valueOf(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC)));
-        addMusicFilesFrom(String.valueOf(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)));
-    }
-
     private void initMusicRecyclerView() {
-        RecyclerView recyclerView = findViewById(R.id.musicRecyclerView);
-        Log.d(TAG, "initMusicRecyclerView: started.");
-        MusicRecyclerViewAdapter musicRecyclerViewAdapter = new MusicRecyclerViewAdapter(musicPaths, this);
+        recyclerView = findViewById(R.id.musicRecyclerView);
+        MusicRecyclerViewAdapter musicRecyclerViewAdapter = new MusicRecyclerViewAdapter(musicListViewModel, this, this);
         recyclerView.setAdapter(musicRecyclerViewAdapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
     }
 
     @Override
-    public void OnMusicClick(MusicRecyclerViewAdapter.MusicViewHolder holder) {
-        Log.d(TAG, "OnMusicClick: clicked " + holder.getAdapterPosition());
-        String musicPath = holder.getMusicPath();
-        if (currentPlayingHolder == holder)
-            return;
-        playMusicFile(musicPath);
-        if (currentPlayingHolder != null) {
-            currentPlayingHolder.setTextColor(getResources().getColor(R.color.teal_200));
-            currentPlayingHolder.setBackgroundColor(Color.TRANSPARENT);
-        }
-        holder.setTextColor(Color.BLACK);
-        holder.setBackgroundColor(getResources().getColor(R.color.teal_200));
-        currentPlayingHolder = holder;
+    public void OnMusicClick(int position) {
+        playMusicAtPosition(position);
     }
 
-    private void playMusicFile(String musicPath) {
+    @SuppressWarnings("ConstantConditions")
+    private void playMusicAtPosition(int position) {
+        findViewById(R.id.utilityBar).setVisibility(View.VISIBLE);
+        findViewById(R.id.seekBar).setVisibility(View.VISIBLE);
+        MusicViewModel musicViewModel = musicListViewModel.getMusicViewModelAtPosition(position);
+        MusicViewModel currentMusicViewModel = musicListViewModel.getCurrentMusicViewModel();
+        recyclerView.getAdapter().notifyDataSetChanged();
+        recyclerView.scrollToPosition(position);
+        if (musicViewModel == currentMusicViewModel)
+            return;
+        musicListViewModel.setCurrentMusicViewModel(musicViewModel);
         try {
             mediaPlayer.reset();
-            mediaPlayer.setDataSource(musicPath);
+            mediaPlayer.setDataSource(musicViewModel.getMusicPath());
             mediaPlayer.prepare();
             mediaPlayer.start();
+            TextView totalMusicTime = findViewById(R.id.totalMusicTime);
+            totalMusicTime.setText(durationToString(mediaPlayer.getDuration()));
+            seekBar.setMax(mediaPlayer.getDuration());
+            TextView currentMusicTime = findViewById(R.id.currentMusicTime);
+            currentMusicTime.setText(durationToString(mediaPlayer.getCurrentPosition()));
+            seekBar.setProgress(mediaPlayer.getCurrentPosition());
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private String durationToString(int duration) {
+        int seconds = duration % 60000 / 1000;
+        int minutes = duration / 60000;
+        String sSeconds = String.valueOf(seconds);
+        if(seconds < 10) {
+            sSeconds = "0" + sSeconds;
+        }
+        String sMinutes = String.valueOf(minutes);
+        return sMinutes + ":" + sSeconds;
+    }
+
+    private void previousMusic() {
+        if(mediaPlayer.getCurrentPosition() > 5000)
+            mediaPlayer.seekTo(0);
+        else {
+            MusicViewModel currentMusicViewModel = musicListViewModel.getCurrentMusicViewModel();
+            MusicViewModel musicViewModel = musicListViewModel.getMusicViewModelAtPosition(musicListViewModel.getMusicViewModelPosition(currentMusicViewModel) - 1);
+            playMusicAtPosition(musicListViewModel.getMusicViewModelPosition(musicViewModel));
+        }
+    }
+
+    private void pauseMusic(ImageButton pauseButton) {
+        if(mediaPlayer.isPlaying()) {
+            mediaPlayer.pause();
+            pauseButton.setImageResource(android.R.drawable.ic_media_play);
+        } else {
+            mediaPlayer.start();
+            pauseButton.setImageResource(android.R.drawable.ic_media_pause);
+        }
+    }
+
+    private void nextMusic() {
+        MusicViewModel currentMusicViewModel = musicListViewModel.getCurrentMusicViewModel();
+        MusicViewModel musicViewModel = musicListViewModel.getMusicViewModelAtPosition(musicListViewModel.getMusicViewModelPosition(currentMusicViewModel) + 1);
+        playMusicAtPosition(musicListViewModel.getMusicViewModelPosition(musicViewModel));
+    }
+
+    private void seekToUpdate() {
+        mediaPlayer.seekTo(seekBar.getProgress());
     }
 }

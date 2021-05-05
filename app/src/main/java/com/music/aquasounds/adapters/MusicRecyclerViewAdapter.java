@@ -1,4 +1,6 @@
 package com.music.aquasounds.adapters;
+import android.content.Context;
+import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -7,15 +9,18 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import com.music.aquasounds.R;
-import java.util.ArrayList;
+import com.music.aquasounds.viewmodels.MusicListViewModel;
+import com.music.aquasounds.viewmodels.MusicViewModel;
 
 public class MusicRecyclerViewAdapter extends RecyclerView.Adapter<MusicRecyclerViewAdapter.MusicViewHolder> {
-    private final ArrayList<String> musicPaths;
+    private final MusicListViewModel musicListViewModel;
     private final OnMusicClickListener onMusicClickListener;
+    private final Context context;
 
-    public MusicRecyclerViewAdapter(ArrayList<String> musicPaths, OnMusicClickListener onMusicClickListener) {
-        this.musicPaths = musicPaths;
+    public MusicRecyclerViewAdapter(MusicListViewModel musicListViewModel, OnMusicClickListener onMusicClickListener, Context context) {
+        this.musicListViewModel = musicListViewModel;
         this.onMusicClickListener = onMusicClickListener;
+        this.context = context;
     }
 
     @NonNull
@@ -27,20 +32,27 @@ public class MusicRecyclerViewAdapter extends RecyclerView.Adapter<MusicRecycler
 
     @Override
     public void onBindViewHolder(@NonNull MusicViewHolder holder, int position) {
-        String musicPath = musicPaths.get(position);
-        holder.musicPath = musicPath;
-        String musicName = musicPath.substring(musicPath.lastIndexOf('/') + 1, musicPath.lastIndexOf('.'));
-        holder.musicName.setText(musicName);
+        MusicViewModel musicViewModel = musicListViewModel.getMusicViewModelAtPosition(position);
+        holder.musicName.setText(musicViewModel.getMusicName());
+        holder.position = position;
+        if(musicViewModel == musicListViewModel.getCurrentMusicViewModel()) {
+            holder.setTextColor(Color.BLACK);
+            holder.setBackgroundColor(context.getResources().getColor(R.color.teal_200));
+        }
+        else {
+            holder.setTextColor(context.getResources().getColor(R.color.teal_200));
+            holder.setBackgroundColor(Color.TRANSPARENT);
+        }
     }
 
     @Override
     public int getItemCount() {
-        return musicPaths.size();
+        return musicListViewModel.getItemCount();
     }
 
     public static class MusicViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
         TextView musicName;
-        String musicPath;
+        int position;
         RelativeLayout parentLayout;
         OnMusicClickListener onMusicClickListener;
 
@@ -54,11 +66,7 @@ public class MusicRecyclerViewAdapter extends RecyclerView.Adapter<MusicRecycler
 
         @Override
         public void onClick(View view) {
-            onMusicClickListener.OnMusicClick(this);
-        }
-
-        public String getMusicPath() {
-            return musicPath;
+            onMusicClickListener.OnMusicClick(position);
         }
 
         public void setTextColor(int color) {
@@ -68,53 +76,10 @@ public class MusicRecyclerViewAdapter extends RecyclerView.Adapter<MusicRecycler
         public void setBackgroundColor(int color) {
             parentLayout.setBackgroundColor(color);
         }
+
     }
 
     public interface OnMusicClickListener {
-        void OnMusicClick(MusicViewHolder holder);
+        void OnMusicClick(int position);
     }
-
-//
-//    private String durationToString(int duration) {
-//        int seconds = duration % 60000 / 1000;
-//        int minutes = duration / 60000;
-//        String sSeconds = String.valueOf(seconds);
-//        if(seconds < 10) {
-//            sSeconds = "0" + sSeconds;
-//        }
-//        String sMinutes = String.valueOf(minutes);
-//        return sMinutes + ":" + sSeconds;
-//    }
-//
-//    private void previousMusic() {
-//        if(mp.getCurrentPosition() > 5000)
-//            mp.seekTo(0);
-//        else {
-//            String currentPath;
-//            try {
-//                currentPath = musicFilesList.get(currentlyPlaying - 1);
-//            } catch (Exception e) {
-//                currentPath = musicFilesList.get(musicFilesList.size() - 1);
-//            }
-//            playMusicFile(currentPath);
-//        }
-//    }
-//    private void pauseMusic(ImageButton pauseButton) {
-//        if(mp.isPlaying()) {
-//            mp.pause();
-//            pauseButton.setImageResource(android.R.drawable.ic_media_play);
-//        } else {
-//            mp.start();
-//            pauseButton.setImageResource(android.R.drawable.ic_media_pause);
-//        }
-//    }
-//    private void nextMusic() {
-//        String currentPath;
-//        try {
-//            currentPath = musicFilesList.get(currentlyPlaying + 1);
-//        } catch (Exception e) {
-//            currentPath = musicFilesList.get(0);
-//        }
-//        playMusicFile(currentPath);
-//    }
 }
