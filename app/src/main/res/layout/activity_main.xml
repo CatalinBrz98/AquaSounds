@@ -55,16 +55,37 @@
             android:background="@android:color/transparent"
             android:adjustViewBounds="true"
             android:scaleType="fitCenter"/>
-        <TextView
-            android:id="@+id/totalMusicTime"
-            android:paddingStart="0dp"
-            android:paddingEnd="16dp"
-            android:paddingRight="16dp"
-            android:paddingLeft="0dp"
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:gravity="end"
-            android:layout_weight="1"/>
+            android:orientation="vertical"
+            android:layout_weight="1"
+            android:gravity="end">
+            <TextView
+                android:id="@+id/totalMusicTime"
+                android:paddingStart="0dp"
+                android:paddingEnd="16dp"
+                android:paddingRight="16dp"
+                android:paddingLeft="0dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="end"/>
+            <ImageButton
+                android:id="@+id/repeatButton"
+                android:paddingStart="0dp"
+                android:paddingEnd="16dp"
+                android:paddingRight="16dp"
+                android:paddingLeft="0dp"
+                android:paddingTop="10dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:src="@android:drawable/stat_notify_sync"
+                android:background="@android:color/transparent"
+                android:adjustViewBounds="true"
+                android:scaleType="fitCenter"
+                android:visibility="gone"/>
+        </LinearLayout>
     </LinearLayout>
 
     <SeekBar

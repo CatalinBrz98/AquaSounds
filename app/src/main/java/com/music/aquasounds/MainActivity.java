@@ -5,6 +5,7 @@ import android.app.ActivityManager;
 import android.content.pm.PackageManager;
 import android.media.MediaPlayer;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.SeekBar;
@@ -18,8 +19,6 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.music.aquasounds.adapters.MusicRecyclerViewAdapter;
 import com.music.aquasounds.viewmodels.MusicListViewModel;
 import com.music.aquasounds.viewmodels.MusicViewModel;
-
-import org.w3c.dom.Text;
 
 public class MainActivity extends AppCompatActivity implements MusicRecyclerViewAdapter.OnMusicClickListener {
 
@@ -85,6 +84,33 @@ public class MainActivity extends AppCompatActivity implements MusicRecyclerView
         });
         musicListViewModel.fillMusicViewModels();
         initMusicRecyclerView();
+        if(savedInstanceState != null && savedInstanceState.containsKey("utilityBarVisibility")) {
+            try {
+                Log.d(TAG, "onCreate: " + savedInstanceState);
+                int utilityBarVisibility = savedInstanceState.getInt("utilityBarVisibility");
+                findViewById(R.id.utilityBar).setVisibility(utilityBarVisibility);
+                findViewById(R.id.seekBar).setVisibility(utilityBarVisibility);
+                playMusicAtPosition(savedInstanceState.getInt("currentMusicViewModel"));
+                mediaPlayer.seekTo(savedInstanceState.getInt("mediaPlayerCurrentPosition"));
+                if(!savedInstanceState.getBoolean("mediaPlayerIsPlaying"))
+                    pauseMusic(imageButton);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+    }
+
+    @Override
+    protected void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        if(musicListViewModel.getCurrentMusicViewModel() == null)
+            return;
+        outState.putInt("utilityBarVisibility", seekBar.getVisibility());
+        outState.putBoolean("mediaPlayerIsPlaying", mediaPlayer.isPlaying());
+        outState.putInt("currentMusicViewModel", musicListViewModel.getPositionFromMusicViewModel(musicListViewModel.getCurrentMusicViewModel()));
+        outState.putInt("mediaPlayerCurrentPosition", mediaPlayer.getCurrentPosition());
+        mediaPlayer.reset();
     }
 
     private void initMusicRecyclerView() {
@@ -99,7 +125,6 @@ public class MainActivity extends AppCompatActivity implements MusicRecyclerView
         playMusicAtPosition(position);
     }
 
-    @SuppressWarnings("ConstantConditions")
     private void playMusicAtPosition(int position) {
         findViewById(R.id.utilityBar).setVisibility(View.VISIBLE);
         findViewById(R.id.seekBar).setVisibility(View.VISIBLE);
@@ -121,6 +146,22 @@ public class MainActivity extends AppCompatActivity implements MusicRecyclerView
             TextView currentMusicTime = findViewById(R.id.currentMusicTime);
             currentMusicTime.setText(durationToString(mediaPlayer.getCurrentPosition()));
             seekBar.setProgress(mediaPlayer.getCurrentPosition());
+            new Thread() {
+                @SuppressWarnings("BusyWait")
+                public void run() {
+                    while(mediaPlayer.getCurrentPosition() < mediaPlayer.getDuration()) {
+                        runOnUiThread(() -> {
+                            currentMusicTime.setText(durationToString(mediaPlayer.getCurrentPosition()));
+                            seekBar.setProgress(mediaPlayer.getCurrentPosition());
+                        });
+                        try {
+                            Thread.sleep(1000);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+            }.start();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -142,8 +183,8 @@ public class MainActivity extends AppCompatActivity implements MusicRecyclerView
             mediaPlayer.seekTo(0);
         else {
             MusicViewModel currentMusicViewModel = musicListViewModel.getCurrentMusicViewModel();
-            MusicViewModel musicViewModel = musicListViewModel.getMusicViewModelAtPosition(musicListViewModel.getMusicViewModelPosition(currentMusicViewModel) - 1);
-            playMusicAtPosition(musicListViewModel.getMusicViewModelPosition(musicViewModel));
+            MusicViewModel musicViewModel = musicListViewModel.getMusicViewModelAtPosition(musicListViewModel.getPositionFromMusicViewModel(currentMusicViewModel) - 1);
+            playMusicAtPosition(musicListViewModel.getPositionFromMusicViewModel(musicViewModel));
         }
     }
 
@@ -159,8 +200,8 @@ public class MainActivity extends AppCompatActivity implements MusicRecyclerView
 
     private void nextMusic() {
         MusicViewModel currentMusicViewModel = musicListViewModel.getCurrentMusicViewModel();
-        MusicViewModel musicViewModel = musicListViewModel.getMusicViewModelAtPosition(musicListViewModel.getMusicViewModelPosition(currentMusicViewModel) + 1);
-        playMusicAtPosition(musicListViewModel.getMusicViewModelPosition(musicViewModel));
+        MusicViewModel musicViewModel = musicListViewModel.getMusicViewModelAtPosition(musicListViewModel.getPositionFromMusicViewModel(currentMusicViewModel) + 1);
+        playMusicAtPosition(musicListViewModel.getPositionFromMusicViewModel(musicViewModel));
     }
 
     private void seekToUpdate() {

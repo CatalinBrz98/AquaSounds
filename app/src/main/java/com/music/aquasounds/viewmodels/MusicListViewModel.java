@@ -63,7 +63,7 @@ public class MusicListViewModel {
         return currentMusicViewModel;
     }
 
-    public int getMusicViewModelPosition(MusicViewModel musicViewModel) {
+    public int getPositionFromMusicViewModel(MusicViewModel musicViewModel) {
         return musicViewModels.indexOf(musicViewModel);
     }
 
