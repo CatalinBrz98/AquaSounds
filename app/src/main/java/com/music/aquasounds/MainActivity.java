@@ -58,7 +58,7 @@ public class MainActivity extends AppCompatActivity implements MusicRecyclerView
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_music_list);
         mediaPlayer = new MediaPlayer();
         findViewById(R.id.previousButton).setOnClickListener(view -> previousMusic());
         ImageButton imageButton = findViewById(R.id.pauseButton);
