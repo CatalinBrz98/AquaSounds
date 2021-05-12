@@ -1,0 +1,1 @@
+keytool -exportcert -alias androiddebugkey -keystore "C:\Users\Catalin\.android\debug.keystore" | "E:\Info\Limbaje\Android\AquaSounds\OpenSSL\bin\openssl" sha1 -binary | "E:\Info\Limbaje\Android\AquaSounds\OpenSSL\bin\openssl" base64

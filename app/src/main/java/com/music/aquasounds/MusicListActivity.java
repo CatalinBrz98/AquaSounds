@@ -16,14 +16,23 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.facebook.login.LoginManager;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.music.aquasounds.adapters.MusicRecyclerViewAdapter;
 import com.music.aquasounds.viewmodels.MusicListViewModel;
 import com.music.aquasounds.viewmodels.MusicViewModel;
 
-public class MainActivity extends AppCompatActivity implements MusicRecyclerViewAdapter.OnMusicClickListener {
+import org.w3c.dom.Text;
+
+import java.util.Objects;
+
+public class MusicListActivity extends AppCompatActivity implements MusicRecyclerViewAdapter.OnMusicClickListener {
 
     private static final String[] PERMISSIONS = {
-        Manifest.permission.READ_EXTERNAL_STORAGE
+            Manifest.permission.READ_EXTERNAL_STORAGE,
+            Manifest.permission.INTERNET
     };
     private static final String TAG = "MainActivity";
 
@@ -32,6 +41,7 @@ public class MainActivity extends AppCompatActivity implements MusicRecyclerView
     private final MusicListViewModel musicListViewModel = new MusicListViewModel();
     private RecyclerView recyclerView;
     private SeekBar seekBar;
+    FirebaseAuth mAuth;
 
     @SuppressLint("NewApi")
     private boolean permissionsGranted() {
@@ -98,7 +108,13 @@ public class MainActivity extends AppCompatActivity implements MusicRecyclerView
                 e.printStackTrace();
             }
         }
-
+        mAuth = FirebaseAuth.getInstance();
+        updateUserName();
+        findViewById(R.id.logoutButton).setOnClickListener(view -> {
+            mAuth.signOut();
+            LoginManager.getInstance().logOut();
+            finish();
+        });
     }
 
     @Override
@@ -130,7 +146,7 @@ public class MainActivity extends AppCompatActivity implements MusicRecyclerView
         findViewById(R.id.seekBar).setVisibility(View.VISIBLE);
         MusicViewModel musicViewModel = musicListViewModel.getMusicViewModelAtPosition(position);
         MusicViewModel currentMusicViewModel = musicListViewModel.getCurrentMusicViewModel();
-        recyclerView.getAdapter().notifyDataSetChanged();
+        Objects.requireNonNull(recyclerView.getAdapter()).notifyDataSetChanged();
         recyclerView.scrollToPosition(position);
         if (musicViewModel == currentMusicViewModel)
             return;
@@ -206,5 +222,13 @@ public class MainActivity extends AppCompatActivity implements MusicRecyclerView
 
     private void seekToUpdate() {
         mediaPlayer.seekTo(seekBar.getProgress());
+    }
+
+    private void updateUserName() {
+        mAuth = FirebaseAuth.getInstance();
+        FirebaseUser currentUser = mAuth.getCurrentUser();
+        TextView userName = findViewById(R.id.userName);
+        assert currentUser != null;
+        userName.setText(currentUser.getDisplayName());
     }
 }
