@@ -10,22 +10,17 @@ import android.view.View;
 import android.widget.ImageButton;
 import android.widget.SeekBar;
 import android.widget.TextView;
-
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-
 import com.facebook.login.LoginManager;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.music.aquasounds.adapters.MusicRecyclerViewAdapter;
 import com.music.aquasounds.viewmodels.MusicListViewModel;
 import com.music.aquasounds.viewmodels.MusicViewModel;
-
-import org.w3c.dom.Text;
-
 import java.util.Objects;
 
 public class MusicListActivity extends AppCompatActivity implements MusicRecyclerViewAdapter.OnMusicClickListener {
@@ -70,6 +65,7 @@ public class MusicListActivity extends AppCompatActivity implements MusicRecycle
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
         setContentView(R.layout.activity_music_list);
         mediaPlayer = new MediaPlayer();
+        mediaPlayer.setOnCompletionListener(mediaPlayer -> nextMusic());
         findViewById(R.id.previousButton).setOnClickListener(view -> previousMusic());
         ImageButton imageButton = findViewById(R.id.pauseButton);
         imageButton.setOnClickListener(view -> pauseMusic(imageButton));

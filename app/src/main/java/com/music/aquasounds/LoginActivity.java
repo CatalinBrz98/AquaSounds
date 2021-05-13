@@ -1,4 +1,5 @@
 package com.music.aquasounds;
+
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.ActivityManager;
@@ -6,6 +7,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.util.Log;
+import android.widget.EditText;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -20,6 +22,7 @@ import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.FacebookAuthProvider;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.auth.UserProfileChangeRequest;
 import java.util.Arrays;
 
 public class LoginActivity extends AppCompatActivity {
@@ -83,7 +86,8 @@ public class LoginActivity extends AppCompatActivity {
                 Log.d(TAG, "facebook:onError", error);
             }
         });
-        Log.d(TAG, "onCreate: " + savedInstanceState);
+        findViewById(R.id.loginButton).setOnClickListener(view -> handleLogin());
+        findViewById(R.id.registerButton).setOnClickListener(view -> handleRegister());
     }
 
 
@@ -123,12 +127,56 @@ public class LoginActivity extends AppCompatActivity {
                 });
     }
 
+    private void handleRegister() {
+        String emailInput = ((EditText) findViewById(R.id.emailInput)).getText().toString();
+        String passwordInput = ((EditText) findViewById(R.id.passwordInput)).getText().toString();
+        mAuth.createUserWithEmailAndPassword(emailInput, passwordInput).addOnCompleteListener(this, task -> {
+            if (task.isSuccessful()) {
+                // Sign in success, update UI with the signed-in user's information
+                Log.d(TAG, "createUserWithEmail:success");
+                FirebaseUser user = mAuth.getCurrentUser();
+                UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder()
+                        .setDisplayName(emailInput.substring(0, emailInput.indexOf("@"))).build();
+                assert user != null;
+                user.updateProfile(profileUpdates)
+                        .addOnCompleteListener(task1 -> {
+                            if (task1.isSuccessful())
+                                updateUI(user);
+                        });
+            } else {
+                // If sign in fails, display a message to the user.
+                Log.w(TAG, "createUserWithEmail:failure", task.getException());
+                Toast.makeText(LoginActivity.this, "Authentication failed.",
+                        Toast.LENGTH_SHORT).show();
+                updateUI(null);
+            }
+        });
+    }
+
+    private void handleLogin() {
+        String emailInput = ((EditText) findViewById(R.id.emailInput)).getText().toString();
+        String passwordInput = ((EditText) findViewById(R.id.passwordInput)).getText().toString();
+        mAuth.signInWithEmailAndPassword(emailInput, passwordInput)
+                .addOnCompleteListener(this, task -> {
+                    if (task.isSuccessful()) {
+                        // Sign in success, update UI with the signed-in user's information
+                        Log.d(TAG, "signInWithEmail:success");
+                        FirebaseUser user = mAuth.getCurrentUser();
+                        updateUI(user);
+                    } else {
+                        // If sign in fails, display a message to the user.
+                        Log.w(TAG, "signInWithEmail:failure", task.getException());
+                        Toast.makeText(LoginActivity.this, "Authentication failed.",
+                                Toast.LENGTH_SHORT).show();
+                        updateUI(null);
+                    }
+                });
+    }
+
     private void updateUI(FirebaseUser user) {
         if (user != null) {
             Intent intent = new Intent(LoginActivity.this, MusicListActivity.class);
             startActivity(intent);
-        } else {
-            Toast.makeText(this, "Sign in to continue.", Toast.LENGTH_SHORT).show();
         }
     }
 }

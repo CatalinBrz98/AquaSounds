@@ -2,7 +2,9 @@
     <string name="app_name">Aqua Sounds</string>
     <string name="facebook_app_id">211985393627425</string>
     <string name="fb_login_protocol_scheme">fb211985393627425</string>
-    <string name="log_out">LOG OUT</string>
-    <string name="login">LOGIN</string>
-    <string name="register">register</string>
+    <string name="log_out">Log out</string>
+    <string name="login">Log in</string>
+    <string name="email_hint">Email</string>
+    <string name="password_hint">Password</string>
+    <string name="register">Register</string>
 </resources>
