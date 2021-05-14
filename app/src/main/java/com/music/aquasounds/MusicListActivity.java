@@ -2,9 +2,14 @@ package com.music.aquasounds;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.ActivityManager;
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.media.MediaPlayer;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -14,6 +19,8 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.facebook.login.LoginManager;
@@ -110,10 +117,12 @@ public class MusicListActivity extends AppCompatActivity implements MusicRecycle
             mAuth.signOut();
             LoginManager.getInstance().logOut();
             finish();
-            Intent intent = new Intent(MusicListActivity.this, LoginActivity.class);
+            Intent intent = new Intent(this, LoginActivity.class);
             startActivity(intent);
             overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
         });
+        createNotificationChannel();
+        createNotification();
     }
 
     @Override
@@ -234,5 +243,31 @@ public class MusicListActivity extends AppCompatActivity implements MusicRecycle
         TextView userName = findViewById(R.id.userName);
         assert currentUser != null;
         userName.setText(currentUser.getDisplayName());
+    }
+
+    private void createNotificationChannel() {
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            CharSequence name = "aquaSoundsChannel";
+            String description = "Channel for Aqua Sounds App";
+            int importance = NotificationManager.IMPORTANCE_LOW;
+            NotificationChannel channel = new NotificationChannel("aquaSounds", name, importance);
+            channel.setDescription(description);
+            NotificationManager notificationManager = getSystemService(NotificationManager.class);
+            notificationManager.createNotificationChannel(channel);
+        }
+    }
+
+    private void createNotification() {
+        Intent intent = new Intent(this, LoginActivity.class);
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, 100, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, "aquaSounds")
+                .setSmallIcon(R.drawable.ic_launcher_foreground)
+                .setContentTitle("Log out")
+                .setContentText("Press this to log out.")
+                .setAutoCancel(true)
+                .setContentIntent(pendingIntent);
+        NotificationManagerCompat notificationManager = NotificationManagerCompat.from(this);
+        Notification logoutNotification = builder.build();
+        notificationManager.notify(100, logoutNotification);
     }
 }
