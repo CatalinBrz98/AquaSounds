@@ -2,6 +2,7 @@ package com.music.aquasounds;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.ActivityManager;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.media.MediaPlayer;
 import android.os.Bundle;
@@ -65,7 +66,6 @@ public class MusicListActivity extends AppCompatActivity implements MusicRecycle
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
         setContentView(R.layout.activity_music_list);
         mediaPlayer = new MediaPlayer();
-        mediaPlayer.setOnCompletionListener(mediaPlayer -> nextMusic());
         findViewById(R.id.previousButton).setOnClickListener(view -> previousMusic());
         ImageButton imageButton = findViewById(R.id.pauseButton);
         imageButton.setOnClickListener(view -> pauseMusic(imageButton));
@@ -110,7 +110,16 @@ public class MusicListActivity extends AppCompatActivity implements MusicRecycle
             mAuth.signOut();
             LoginManager.getInstance().logOut();
             finish();
+            Intent intent = new Intent(MusicListActivity.this, LoginActivity.class);
+            startActivity(intent);
+            overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
         });
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        mediaPlayer.reset();
     }
 
     @Override
@@ -122,7 +131,6 @@ public class MusicListActivity extends AppCompatActivity implements MusicRecycle
         outState.putBoolean("mediaPlayerIsPlaying", mediaPlayer.isPlaying());
         outState.putInt("currentMusicViewModel", musicListViewModel.getPositionFromMusicViewModel(musicListViewModel.getCurrentMusicViewModel()));
         outState.putInt("mediaPlayerCurrentPosition", mediaPlayer.getCurrentPosition());
-        mediaPlayer.reset();
     }
 
     private void initMusicRecyclerView() {
