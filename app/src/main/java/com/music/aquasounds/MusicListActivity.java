@@ -262,8 +262,8 @@ public class MusicListActivity extends AppCompatActivity implements MusicRecycle
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 100, intent, PendingIntent.FLAG_UPDATE_CURRENT);
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, "aquaSounds")
                 .setSmallIcon(R.drawable.ic_launcher_foreground)
-                .setContentTitle("Log out")
-                .setContentText("Press this to log out.")
+                .setContentTitle("Start")
+                .setContentText("Open the application.")
                 .setAutoCancel(true)
                 .setContentIntent(pendingIntent);
         NotificationManagerCompat notificationManager = NotificationManagerCompat.from(this);
