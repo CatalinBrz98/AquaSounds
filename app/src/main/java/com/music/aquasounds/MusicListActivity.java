@@ -43,6 +43,7 @@ public class MusicListActivity extends AppCompatActivity implements MusicRecycle
     private MediaPlayer mediaPlayer;
     private final MusicListViewModel musicListViewModel = new MusicListViewModel();
     private RecyclerView recyclerView;
+    ImageButton pauseButton;
     private SeekBar seekBar;
     FirebaseAuth mAuth;
 
@@ -74,8 +75,8 @@ public class MusicListActivity extends AppCompatActivity implements MusicRecycle
         setContentView(R.layout.activity_music_list);
         mediaPlayer = new MediaPlayer();
         findViewById(R.id.previousButton).setOnClickListener(view -> previousMusic());
-        ImageButton imageButton = findViewById(R.id.pauseButton);
-        imageButton.setOnClickListener(view -> pauseMusic(imageButton));
+        pauseButton = findViewById(R.id.pauseButton);
+        pauseButton.setOnClickListener(view -> pauseMusic());
         findViewById(R.id.nextButton).setOnClickListener(view -> nextMusic());
         seekBar = findViewById(R.id.seekBar);
         seekBar.setActivated(true);
@@ -106,21 +107,14 @@ public class MusicListActivity extends AppCompatActivity implements MusicRecycle
                 playMusicAtPosition(savedInstanceState.getInt("currentMusicViewModel"));
                 mediaPlayer.seekTo(savedInstanceState.getInt("mediaPlayerCurrentPosition"));
                 if(!savedInstanceState.getBoolean("mediaPlayerIsPlaying"))
-                    pauseMusic(imageButton);
+                    pauseMusic();
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
         mAuth = FirebaseAuth.getInstance();
         updateUserName();
-        findViewById(R.id.logoutButton).setOnClickListener(view -> {
-            mAuth.signOut();
-            LoginManager.getInstance().logOut();
-            finish();
-            Intent intent = new Intent(this, LoginActivity.class);
-            startActivity(intent);
-            overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
-        });
+        findViewById(R.id.logoutButton).setOnClickListener(view -> handleLogout());
         createNotificationChannel();
         createNotification();
     }
@@ -194,6 +188,16 @@ public class MusicListActivity extends AppCompatActivity implements MusicRecycle
         } catch (Exception e) {
             e.printStackTrace();
         }
+        pauseButton.setImageResource(android.R.drawable.ic_media_pause);
+    }
+
+    private void handleLogout() {
+        mAuth.signOut();
+        LoginManager.getInstance().logOut();
+        Intent intent = new Intent(this, LoginActivity.class);
+        startActivity(intent);
+        overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
+        finish();
     }
 
     private String durationToString(int duration) {
@@ -217,7 +221,7 @@ public class MusicListActivity extends AppCompatActivity implements MusicRecycle
         }
     }
 
-    private void pauseMusic(ImageButton pauseButton) {
+    private void pauseMusic() {
         if(mediaPlayer.isPlaying()) {
             mediaPlayer.pause();
             pauseButton.setImageResource(android.R.drawable.ic_media_play);
